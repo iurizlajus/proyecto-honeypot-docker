@@ -1,0 +1,46 @@
+services:
+  checkmk:
+    image: checkmk/check-mk-raw:2.3.0p1
+    container_name: checkmk_monitor
+    environment:
+      - CMK_PASSWORD=${CMK_PASSWORD}
+    volumes:
+      - checkmk_data:/omd/sites
+      - honeypot_logs:/app/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - red-honeypot
+    tmpfs:
+      - /opt/omd/sites/cmk/tmp:uid=1000,gid=1000
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.25.4-alpine
+    container_name: reverse_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - red-honeypot
+    depends_on:
+      - checkmk
+      - honeypot
+    restart: unless-stopped
+
+  honeypot:
+    build: ./honeypot
+    container_name: honeypot_app
+    volumes:
+      - honeypot_logs:/app/logs
+    networks:
+      - red-honeypot
+    restart: unless-stopped
+
+networks:
+  red-honeypot:
+    driver: bridge
+
+volumes:
+  checkmk_data:
+  honeypot_logs:
