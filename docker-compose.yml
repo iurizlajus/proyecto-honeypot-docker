@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
     environment:
       - WEBSOCKET_ENABLED=true
-      - ADMIN_TOKEN=$$argon2id$$v=19$$m=65540,t=3,p=4$$3zxADBiGVAUKla2udy3d3qedV7Keu3V4/chTqB/G3GM$$g4JlLGtCluvVt4mlEwgkGEJgokRyE3qqswwLJQvkGtA
+      - ADMIN_TOKEN=$$argon2id$$v=19$$m=65536,t=3,p=4$$c2FsdDEyMzQ1Njc4$$TcMgmBnK/RLtt8VPCCCVdiv7JxIxkgI+fSMKAjdXXNg
     volumes:
       - vaultwarden-data:/data
     networks:
