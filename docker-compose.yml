@@ -2,16 +2,12 @@ services:
   checkmk:
     image: checkmk/check-mk-raw:2.3.0p1
     container_name: checkmk_monitor
-    environment:
-      - CMK_PASSWORD=${CMK_PASSWORD}
     volumes:
       - checkmk_data:/omd/sites
-      - honeypot_logs:/app/logs:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - honeypot_logs:/app/logs
     networks:
       - red-honeypot
-    tmpfs:
-      - /opt/omd/sites/cmk/tmp:uid=1000,gid=1000
     restart: unless-stopped
 
   nginx:
@@ -20,7 +16,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx:/etc/nginx
     networks:
       - red-honeypot
     depends_on:
@@ -37,6 +33,24 @@ services:
       - red-honeypot
     restart: unless-stopped
 
+  vaultwarden:
+    image: vaultwarden/server:1.32.0
+    container_name: vaultwarden-server
+    restart: unless-stopped
+    environment:
+      - WEBSOCKET_ENABLED=true
+      - ADMIN_TOKEN=$$argon2id$$v=19$$m=65540,t=3,p=4$$3zxADBiGVAUKla2udy3d3qedV7Keu3V4/chTqB/G3GM$$g4JlLGtCluvVt4mlEwgkGEJgokRyE3qqswwLJQvkGtA
+    volumes:
+      - vaultwarden-data:/data
+    networks:
+      - red-honeypot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
 networks:
   red-honeypot:
     driver: bridge
@@ -44,3 +58,5 @@ networks:
 volumes:
   checkmk_data:
   honeypot_logs:
+  vaultwarden-data:
+    driver: local
